@@ -19,7 +19,7 @@ app.use(
   cors({
     origin: [
       'http://localhost:5173', // local dev frontend
-      'https://finance-management-rpoy.onrender.com' // deployed frontend
+      'https://finance-management-frontend-s9g3.onrender.com' // deployed frontend
     ],
     credentials: true,
   })
