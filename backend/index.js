@@ -32,6 +32,10 @@ app.use('/api/transaction', transactionRoutes);
 app.use('/api/budgets', budgetRoutes);
 app.use('/api/category', categoryRoutes);
 
+app.get('/', (req, res)=>{
+  res.send("Server is live");
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
