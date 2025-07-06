@@ -39,6 +39,7 @@ const Dashboard: React.FC = () => {
 
   async function fetchChartData() {
     setIsLoadingChartData(true)
+    console.log(loadingChartData);
 
     try {
       const res = await axios.get(
