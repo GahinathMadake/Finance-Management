@@ -26,6 +26,9 @@ const transactionSchema = z.object({
     amount: z.number().positive('Amount must be positive'),
     date: z.string().nonempty('Date is required'),
     description: z.string().optional(),
+    category: z.enum(['Travelling', 'Healthcare', 'Utilities', 'Shopping', 'Education', 'Food'], {
+        errorMap: () => ({ message: 'Please select a valid category' }),
+    }),
 });
 
 type TransactionFormData = z.infer<typeof transactionSchema>;
@@ -41,6 +44,7 @@ const Transactions: React.FC = () => {
             amount: 0,
             date: '',
             description: '',
+            category: "Utilities",
         },
     });
 
@@ -195,6 +199,28 @@ const Transactions: React.FC = () => {
                             </div>
 
                             <div>
+                                <Label htmlFor="category">Category</Label>
+                                <select
+                                    id="category"
+                                    {...form.register("category")}
+                                    className="mt-1 w-full border px-3 py-2 rounded focus:outline-none focus:ring-0 focus:border-transparent"
+                                >
+                                    <option value="">Select Category</option>
+                                    <option value="Travelling">Travelling</option>
+                                    <option value="Healthcare">Healthcare</option>
+                                    <option value="Utilities">Utilities</option>
+                                    <option value="Shopping">Shopping</option>
+                                    <option value="Education">Education</option>
+                                    <option value="Food">Food</option>
+                                </select>
+                                {form.formState.errors.category && (
+                                    <p className="text-sm text-red-500 mt-1">
+                                        {form.formState.errors.category.message}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div>
                                 <Label htmlFor="amount">Amount</Label>
                                 <Input
                                     id="amount"
@@ -334,7 +360,7 @@ const Transactions: React.FC = () => {
                     </div>
                 </div>
 
-               {
+                {
                     loading ? (
                         <div className="flex justify-center items-center py-10 text-gray-500">Loading transactions...</div>
                     ) : applyChange ? (

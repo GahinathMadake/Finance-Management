@@ -13,14 +13,22 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import type { Transaction } from '@/interfaces/Database';
-import { useState } from 'react';
+import type { Category, Transaction } from '@/interfaces/Database';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
 
 interface TransactionTableProps {
   transactions: Transaction[];
 }
+type EditTransactionForm = {
+  name: string;
+  amount: number;
+  date: string;
+  description: string;
+  categoryId: string;
+};
+
 
 const TransactionTable: React.FC<TransactionTableProps> = ({ transactions }) => {
   const [data, setData] = useState<Transaction[]>(transactions);
@@ -28,12 +36,13 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions }) => 
   const [editTxn, setEditTxn] = useState<Transaction | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
 
-  const form = useForm<Transaction>({
+  const form = useForm<EditTransactionForm>({
     defaultValues: {
       name: '',
       amount: 0,
       date: '',
       description: '',
+      categoryId: '',
     },
   });
 
@@ -59,28 +68,47 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions }) => 
       amount: txn.amount,
       date: txn.date.slice(0, 16),
       description: txn.description || '',
+      categoryId: typeof txn.category === 'string' ? txn.category : txn.category._id,
     });
     setIsEditOpen(true);
   };
 
-  const onEditSubmit = async (formData: Transaction) => {
-    if (!editTxn) return;
+const onEditSubmit = async (formData: EditTransactionForm) => {
+  if (!editTxn) return;
 
-    try {
-      const res = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/api/transaction/update/${editTxn._id}`,
-        formData
-      );
-
-      setData(prev =>
-        prev.map(t => (t._id === editTxn._id ? { ...t, ...res.data } : t))
-      );
-      setIsEditOpen(false);
-    } catch (error) {
-      console.error('Update error:', error);
-      alert('Failed to update transaction');
-    }
+  const payload = {
+    name: formData.name,
+    amount: formData.amount,
+    date: formData.date,
+    description: formData.description,
+    category: formData.categoryId, // backend expects `category`, not `categoryId`
   };
+
+  try {
+    const res = await axios.put(
+      `${import.meta.env.VITE_BACKEND_URL}/api/transaction/update/${editTxn._id}`,
+      payload
+    );
+
+    setData(prev =>
+      prev.map(t => (t._id === editTxn._id ? { ...t, ...res.data } : t))
+    );
+    setIsEditOpen(false);
+  } catch (error) {
+    console.error('Update error:', error);
+    alert('Failed to update transaction');
+  }
+};
+
+
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    axios
+      .get(`${import.meta.env.VITE_BACKEND_URL}/api/category/get`)
+      .then(res => setCategories(res.data))
+      .catch(err => console.error("Failed to load categories", err));
+  }, []);
 
   return (
     <div className="overflow-x-auto shadow-sm">
@@ -161,6 +189,21 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions }) => 
               <Label htmlFor="date">Date & Time</Label>
               <Input type="datetime-local" id="date" {...form.register('date')} />
             </div>
+
+
+            <select
+              id="category"
+              {...form.register('categoryId')}
+              className="w-full border rounded px-3 py-2 focus:outline-none"
+            >
+              <option value="">Select a category</option>
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat._id}>
+                  {cat.type}
+                </option>
+              ))}
+            </select>
+
 
             <div>
               <Label htmlFor="description">Description (optional)</Label>

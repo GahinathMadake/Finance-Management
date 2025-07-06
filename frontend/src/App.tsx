@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/dashboard/Dashboard";
 import Transactions from "./pages/dashboard/Transactions";
 import SetBudget from "./pages/dashboard/budget/SetBudget";
+import Categories from "./pages/dashboard/Categories";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route index element={<Dashboard />}/>
           <Route path='transactions' element={<Transactions />}/>
           <Route path='budgets/set' element={<SetBudget />}/>
+          <Route path='categories' element={<Categories />}/>
         </Route>
 
         {/* Catch-all Route for 404 */}

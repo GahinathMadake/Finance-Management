@@ -9,6 +9,19 @@ import {
   IndianRupee,
 } from "lucide-react"
 import axios from "axios"
+import { ChartBarMonthly, ChartPieLabelList } from "./home/chart"
+
+interface MonthlyChartData {
+  month: string,
+  budget: number,
+  expenses: number,
+}
+
+interface CategoryChartData {
+  category: string;
+  amount: number;
+  fill: string;
+}
 
 const Dashboard: React.FC = () => {
   const [dashboardData, setDashboardData] = useState({
@@ -18,6 +31,35 @@ const Dashboard: React.FC = () => {
     recentTransactions: 0,
   });
   const [loading, setLoading] = useState<boolean>(true);
+
+  // Chart Data
+  const [monthlyChartData, setMonthlyChartData] = useState<MonthlyChartData[]>([]);
+  const [categoryData, setCategoryData] = useState<CategoryChartData[]>([]);
+  const [loadingChartData, setIsLoadingChartData] = useState<boolean>(true)
+
+  async function fetchChartData() {
+    setIsLoadingChartData(true)
+
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/api/dashboard/monthly-chart-data?months=6`
+      )
+      console.log(res);
+      setMonthlyChartData(res.data);
+
+
+      const res2 = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/dashboard/category-wise-expenses`);
+      setCategoryData(res2.data);
+
+
+    } catch (error) {
+      console.error("Error fetching chart data", error)
+      setMonthlyChartData([]) // fallback in case of failure
+    } finally {
+      setIsLoadingChartData(false)
+    }
+  }
+
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -32,6 +74,7 @@ const Dashboard: React.FC = () => {
     };
 
     fetchDashboard();
+    fetchChartData();
   }, []);
 
   const currentMonthName = new Date().toLocaleString('default', { month: 'long' });
@@ -121,6 +164,20 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <div className="my-4 grid grid-cols-1 lg:grid-cols-7 gap-6">
+        {/* Left Column (4/7 width on lg screens) */}
+        <div className="w-full lg:col-span-3 space-y-4">
+          <ChartBarMonthly data={monthlyChartData} />
+          <ChartPieLabelList data={categoryData} />
+        </div>
+
+        {/* Right Column (3/7 width on lg screens) */}
+        <div className="h-full w-full lg:col-span-4">
+          
+        </div>
+      </div>
+
     </div>
   )
 }

@@ -1,22 +1,42 @@
 const Transaction = require('../models/Transactions');
+const Category = require('../models/Category');
+
 
 // POST /api/transaction/add-transaction
 const createTransaction = async (req, res) => {
   try {
-    const { name, amount, date, description } = req.body;
+    const { name, amount, date, description, category } = req.body;
 
     console.log(req.body);
 
-    if (!name || !amount || !date) {
+    // Validate required fields
+    if (!name || !amount || !date || !category) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const transaction = new Transaction({ name, amount, date, description });
+    // Validate if the provided category
+    const categoryDoc = await Category.findOne({ type: category });
+    if (!categoryDoc) {
+      return res.status(400).json({ error: 'Category not found' });
+    }
+
+
+    const transaction = new Transaction({
+      name,
+      amount,
+      date,
+      description,
+      category: categoryDoc._id
+    });
+
+
     await transaction.save();
 
+    // Optionally populate the category field for response
+    await transaction.populate('category');
+
     res.status(201).json(transaction);
-  } 
-  catch (error) {
+  } catch (error) {
     console.error('Error saving transaction:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
@@ -26,7 +46,7 @@ const createTransaction = async (req, res) => {
 const getAllTransactions = async (req, res) => {
   try {
     console.log("All Transactions");
-    const transactions = await Transaction.find();
+    const transactions = await Transaction.find().populate('category');;
     res.status(200).json(transactions);
   } catch (error) {
     console.error('Get All Transactions Error:', error);
@@ -50,7 +70,7 @@ const getThisMonthTransactions = async (req, res) => {
 
     const transactions = await Transaction.find({
       date: { $gte: start, $lte: end }
-    });
+    }).populate('category');
 
     res.status(200).json(transactions);
   } catch (error) {
@@ -82,7 +102,7 @@ const deleteTransaction = async (req, res) => {
 // Update a transaction by ID
 const updateTransaction = async (req, res) => {
   const { id } = req.params;
-  const { name, amount, date, description } = req.body;
+  const { name, amount, date, description, category } = req.body;
 
   try {
     const updatedTxn = await Transaction.findByIdAndUpdate(
@@ -92,9 +112,10 @@ const updateTransaction = async (req, res) => {
         amount,
         date,
         description,
+        category, // ✅ Include category in update
       },
       { new: true }
-    );
+    ).populate('category'); // ✅ Populate category for frontend
 
     if (!updatedTxn) {
       return res.status(404).json({ message: 'Transaction not found' });
@@ -106,5 +127,6 @@ const updateTransaction = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 
 module.exports = { createTransaction, getAllTransactions, getThisMonthTransactions, deleteTransaction, updateTransaction};

@@ -7,6 +7,7 @@ const connectDB = require('./src/config/db');
 const transactionRoutes = require('./src/routes/transaction.routes');
 const dashboardRoutes = require('./src/routes/user.routes');
 const budgetRoutes = require('./src/routes/budget.routes');
+const categoryRoutes = require('./src/routes/category.routes');
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ connectDB();
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/transaction', transactionRoutes);
 app.use('/api/budgets', budgetRoutes);
+app.use('/api/category', categoryRoutes);
 
 // Start server
 app.listen(PORT, () => {
